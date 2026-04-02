@@ -149,16 +149,6 @@ const Navbar = ({ appMode, setAppMode }) => {
                             </button>
                         </div>
                     </div>
-
-                    {/* Mobile menu button */}
-                    <div className="flex items-center md:hidden">
-                        <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="p-2.5 rounded-lg text-gray-600 hover:bg-emerald-50 focus:outline-none"
-                        >
-                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
-                    </div>
                 </div>
             </div>
 
