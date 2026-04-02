@@ -15,7 +15,7 @@ const Navbar = ({ appMode, setAppMode }) => {
     const isLoggedIn = !!localStorage.getItem('token');
 
     // 1. Generic Project Name Configuration
-    const GENERIC_NAME = "SyncroPlan"; // Set your generic name here
+    const GENERIC_NAME = "Dualis"; // Set your generic name here
     const GENERIC_COLOR = "from-slate-600 to-slate-800"; // Neutral color for logged out
 
     const handleLogout = () => {
