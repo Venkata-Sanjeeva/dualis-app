@@ -15,6 +15,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './components/pages/LoginPage';
 import LandingPage from './components/LandingPage';
 import RegisterPage from './components/pages/RegisterPage';
+import TimetableCreator from './components/TimetableCreator';
+import TimetablePreview from './components/TimetablePreview';
+import EmployeesPage from './components/corporate/EmployeesPage';
 
 const App = () => {
     const [appMode, setAppMode] = useState('school');
@@ -33,6 +36,8 @@ const App = () => {
                     <Route path="/welcome" element={<LandingPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/timetable-creator" element={<TimetableCreator />} />
+                    <Route path="/timetable-preview" element={<TimetablePreview />} />
 
                     {/* Protected Global Route */}
                     <Route path="/" element={
@@ -57,7 +62,7 @@ const App = () => {
                         <ProtectedRoute appMode={appMode} requiredMode="corporate">
                             <Routes>
                                 <Route path="roster" element={<CorporateRoster />} />
-                                <Route path="employees" element={<div>Employee Management</div>} />
+                                <Route path="employees" element={<EmployeesPage />} />
                             </Routes>
                         </ProtectedRoute>
                     } />
