@@ -4,7 +4,6 @@ import {
     Fingerprint, ShieldCheck,
     Building2
 } from 'lucide-react';
-import { Button } from 'bootstrap';
 import axios from 'axios';
 import ButtonLoader from '../loaders/ButtonLoader';
 

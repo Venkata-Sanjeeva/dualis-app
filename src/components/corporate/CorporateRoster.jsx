@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ShieldAlert, Zap, X, Briefcase, Loader2, ChevronDown, CalendarDays, Clock } from 'lucide-react';
+import { Users, ShieldAlert, Zap, X, CalendarDays, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { format } from 'date-fns';
+import axios from 'axios';
+import LeaveModal from './LeaveModal';
 
 // Helper for conditional classes
 const cn = (...inputs) => twMerge(clsx(inputs));
@@ -23,13 +26,13 @@ const availableMonths = [
 ];
 
 // Reusable Components for consistency
-const Card = ({ children, className }) => (
+export const Card = ({ children, className }) => (
     <div className={cn("bg-white p-6 rounded-2xl border border-gray-100 shadow-sm", className)}>
         {children}
     </div>
 );
 
-const SectionHeader = ({ icon: Icon, title, description }) => (
+export const SectionHeader = ({ icon: Icon, title, description }) => (
     <div className="flex items-center gap-3 mb-5 border-b border-gray-100 pb-4">
         <div className="bg-indigo-50 text-indigo-600 p-2.5 rounded-xl">
             <Icon className="w-6 h-6" />
@@ -53,7 +56,7 @@ const LabeledInput = ({ id, label, description, children }) => (
     </div>
 );
 
-
+const API_URL = process.env.REACT_APP_API_URL;
 
 // --- MAIN COMPONENT ---
 const CorporateRoster = () => {
@@ -93,6 +96,34 @@ const CorporateRoster = () => {
         console.log('Sending Configuration to Backend:', configPayload);
         // Mimic API delay
         setTimeout(() => setIsGenerating(false), 2000);
+    };
+
+    const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+    const [currentEmpForLeave, setCurrentEmpForLeave] = useState(null);
+
+    const handleSaveLeaves = async (empId, selectedDates) => {
+        // 1. Transform dates to yyyy-MM-dd format for your EmployeeLeaveRequest DTO
+        const leaveRequests = selectedDates.map(date => ({
+            empId: empId,
+            leaveDate: format(date, 'yyyy-MM-dd')
+        }));
+
+        try {
+            // 2. Point to your /create/multiple endpoint
+            const response = await axios.post(`${API_URL}/leaves/create/multiple`, leaveRequests, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (response.status === 201) {
+                console.log("Leaves synced to DB:", response.data.message);
+                setIsLeaveModalOpen(false);
+                // Optional: Show a success toast here
+            }
+        } catch (err) {
+            console.error("Backend sync failed:", err.response?.data || err.message);
+        }
     };
 
     return (
@@ -151,15 +182,30 @@ const CorporateRoster = () => {
                         <div className="space-y-4">
                             <p className="text-sm font-medium text-gray-700">Select existing employees (search enabled):</p>
 
-                            {/* Employee "Tags" - interactive */}
                             <div className="flex flex-wrap gap-2.5 border border-gray-100 p-4 rounded-xl bg-gray-50/50 min-h-16">
                                 <AnimatePresence>
                                     {selectedEmployees.map(empId => {
                                         const emp = availableEmployees.find(e => e.id === empId);
                                         return (
-                                            <motion.div key={empId} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3.5 py-1.5 rounded-full text-sm font-medium group">
+                                            <motion.div key={empId} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3.5 py-1.5 rounded-full text-sm font-medium group"
+                                            >
                                                 {emp.name}
                                                 {emp.isSenior && <ShieldAlert className="w-3.5 h-3.5 text-indigo-400" title="Senior Staff" />}
+
+                                                {/* --- ADD THIS BUTTON HERE --- */}
+                                                <button
+                                                    onClick={() => {
+                                                        setCurrentEmpForLeave(emp);
+                                                        setIsLeaveModalOpen(true);
+                                                    }}
+                                                    className="ml-1 p-1 hover:bg-indigo-100 rounded-md transition text-indigo-400 hover:text-indigo-600"
+                                                    title="Set Leave Dates"
+                                                >
+                                                    <CalendarDays className="w-3.5 h-3.5" />
+                                                </button>
+                                                {/* ---------------------------- */}
+
                                                 <button onClick={() => setSelectedEmployees(prev => prev.filter(id => id !== empId))}>
                                                     <X className="w-4 h-4 text-indigo-400 group-hover:text-indigo-600 transition" />
                                                 </button>
@@ -233,6 +279,15 @@ const CorporateRoster = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Modal Logic */}
+            {isLeaveModalOpen && currentEmpForLeave && (
+                <LeaveModal
+                    employee={currentEmpForLeave}
+                    onClose={() => setIsLeaveModalOpen(false)}
+                    onSave={handleSaveLeaves}
+                />
+            )}
         </div>
 
         // <div className="max-w-4xl mx-auto p-4 md:p-8 bg-gray-50/30 min-h-screen font-sans">
