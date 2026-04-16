@@ -1,24 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ShieldAlert, Zap, X, CalendarDays, Clock } from 'lucide-react';
+import { Users, ShieldAlert, Zap, X, CalendarDays, Clock, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format } from 'date-fns';
 import axios from 'axios';
 import LeaveModal from './LeaveModal';
+import StatSkeleton from '../loaders/StatsSkeleton';
 
 // Helper for conditional classes
 const cn = (...inputs) => twMerge(clsx(inputs));
 
-// Mock Data (Replace with API calls)
-const availableEmployees = [
-    { id: 'emp1', name: 'EMP1', role: 'Developer', isSenior: true },
-    { id: 'emp2', name: 'EMP2', role: 'Designer', isSenior: false },
-    { id: 'emp3', name: 'EMP3', role: 'Project Manager', isSenior: true },
-    { id: 'emp4', name: 'EMP4', role: 'QA Lead', isSenior: true },
-    { id: 'emp5', name: 'EMP5', role: 'Support', isSenior: false },
-    { id: 'emp6', name: 'EMP6', role: 'Content Writer', isSenior: false },
-];
+// const availableEmployees = [
+//     { id: 'emp1', name: 'EMP1', role: 'Developer', isSenior: true },
+//     { id: 'emp2', name: 'EMP2', role: 'Designer', isSenior: false },
+//     { id: 'emp3', name: 'EMP3', role: 'Project Manager', isSenior: true },
+//     { id: 'emp4', name: 'EMP4', role: 'QA Lead', isSenior: true },
+//     { id: 'emp5', name: 'EMP5', role: 'Support', isSenior: false },
+//     { id: 'emp6', name: 'EMP6', role: 'Content Writer', isSenior: false },
+// ];
 
 const availableMonths = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -61,7 +61,8 @@ const API_URL = process.env.REACT_APP_API_URL;
 // --- MAIN COMPONENT ---
 const CorporateRoster = () => {
     // 1. Initial Data (From your wireframe)
-    const [selectedEmployees, setSelectedEmployees] = useState(['emp1', 'emp3', 'emp4']);
+    const [availableEmployees, setAvailableEmployees] = useState([]);
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState('January');
     const [daysPerEmployee, setDaysPerEmployee] = useState('');
     const [offDaysPerRotation, setOffDaysPerRotation] = useState('');
@@ -74,9 +75,31 @@ const CorporateRoster = () => {
     const [requireSeniorOnShift, setRequireSeniorOnShift] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
 
+    const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
+
     // Derivations
     const shiftsArray = Object.entries(activeShifts);
     const isValid = selectedEmployees.length > 0 && selectedMonth && daysPerEmployee;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoadingEmployees(true);
+            const data = await axios.get(`${API_URL}/employees/read/all`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            }).catch(err => {
+                console.error('Error fetching employees:', err);
+                setIsLoadingEmployees(false);
+            }).finally(() => setIsLoadingEmployees(false));
+
+            console.log('Fetched Employees from Backend:', data?.data?.data || []);
+
+            setAvailableEmployees(data?.data?.data || []);
+        };
+
+        fetchData();
+    }, [isValid]);
 
     const handleToggleShift = (shiftName) => {
         setActiveShifts(prev => ({ ...prev, [shiftName]: !prev[shiftName] }));
@@ -177,47 +200,114 @@ const CorporateRoster = () => {
                     </Card>
 
                     {/* Section 2: Employees */}
-                    <Card>
-                        <SectionHeader icon={Users} title="Participating Employees" description={`Total selected: ${selectedEmployees.length}`} />
-                        <div className="space-y-4">
-                            <p className="text-sm font-medium text-gray-700">Select existing employees (search enabled):</p>
+                    <Card className="overflow-hidden border-none shadow-lg ring-1 ring-gray-200">
+                        {/* Header Section */}
+                        <div className="bg-gray-50/80 p-6 border-b border-gray-100">
+                            <SectionHeader
+                                icon={Users}
+                                title="Select Employees"
+                                description={`Manage the team for this roster (${selectedEmployees.length} assigned)`}
+                            />
 
-                            <div className="flex flex-wrap gap-2.5 border border-gray-100 p-4 rounded-xl bg-gray-50/50 min-h-16">
-                                <AnimatePresence>
-                                    {selectedEmployees.map(empId => {
-                                        const emp = availableEmployees.find(e => e.id === empId);
-                                        return (
-                                            <motion.div key={empId} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                                                className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3.5 py-1.5 rounded-full text-sm font-medium group"
-                                            >
-                                                {emp.name}
-                                                {emp.isSenior && <ShieldAlert className="w-3.5 h-3.5 text-indigo-400" title="Senior Staff" />}
+                            {/* Clean Search/Select Bar */}
+                            <div className="mt-4 flex gap-2">
+                                <div className="relative flex-1">
+                                    <select
+                                        value=""
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val && !selectedEmployees.includes(val)) {
+                                                setSelectedEmployees(prev => [...prev, val]);
+                                            }
+                                        }}
+                                        className="w-full pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
+                                    >
+                                        <option value="" disabled>Search or select employee to add...</option>
+                                        {availableEmployees
+                                            .filter(e => !selectedEmployees.includes(e.empId))
+                                            .map(e => <option key={e.empId} value={e.empId}>{e.name}</option>)
+                                        }
+                                    </select>
+                                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                                {/* --- ADD THIS BUTTON HERE --- */}
-                                                <button
-                                                    onClick={() => {
-                                                        setCurrentEmpForLeave(emp);
-                                                        setIsLeaveModalOpen(true);
-                                                    }}
-                                                    className="ml-1 p-1 hover:bg-indigo-100 rounded-md transition text-indigo-400 hover:text-indigo-600"
-                                                    title="Set Leave Dates"
-                                                >
-                                                    <CalendarDays className="w-3.5 h-3.5" />
-                                                </button>
-                                                {/* ---------------------------- */}
+                        {/* Content Area */}
+                        <div className="p-6">
+                            <div className="min-h-[200px]">
+                                <AnimatePresence mode="popLayout">
+                                    {selectedEmployees.length > 0 ? (
+                                        <motion.div
+                                            layout
+                                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                                        >
+                                            {selectedEmployees.map((empId) => {
+                                                const emp = availableEmployees.find((e) => e.empId === empId);
+                                                if (!emp) return null;
 
-                                                <button onClick={() => setSelectedEmployees(prev => prev.filter(id => id !== empId))}>
-                                                    <X className="w-4 h-4 text-indigo-400 group-hover:text-indigo-600 transition" />
-                                                </button>
-                                            </motion.div>
-                                        );
-                                    })}
+                                                return (
+                                                    <motion.div
+                                                        key={empId}
+                                                        layout
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        className="group relative flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                                                                {emp.name.charAt(0)}
+                                                            </div>
+                                                            <div className="overflow-hidden">
+                                                                <p className="text-sm font-semibold text-gray-800 truncate">{emp.name}</p>
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">
+                                                                    {emp.designation || 'Staff'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCurrentEmpForLeave(emp);
+                                                                    setIsLeaveModalOpen(true);
+                                                                }}
+                                                                className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                                                                title="Leave Management"
+                                                            >
+                                                                <CalendarDays className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedEmployees(prev => prev.filter(id => id !== empId))}
+                                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </motion.div>
+                                    ) : (
+                                        /* Empty State */
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-100 rounded-2xl"
+                                        >
+                                            <div className="p-3 bg-gray-50 rounded-full mb-3">
+                                                <Users className="w-8 h-8 text-gray-300" />
+                                            </div>
+                                            <p className="text-gray-500 text-sm font-medium">No employees selected for this roster</p>
+                                            <p className="text-gray-400 text-xs mt-1">Use the search bar above to begin.</p>
+                                        </motion.div>
+                                    )}
                                 </AnimatePresence>
-                                {/* Simplified dropdown adder (replace with searchable multiselect for real use) */}
-                                <select defaultValue="" onChange={e => { if (e.target.value && !selectedEmployees.includes(e.target.value)) setSelectedEmployees(p => [...p, e.target.value]); e.target.value = ""; }} className="border-gray-200 rounded-full text-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-1">
-                                    <option value="" disabled>+ Add Employee</option>
-                                    {availableEmployees.filter(e => !selectedEmployees.includes(e.id)).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                                </select>
                             </div>
                         </div>
                     </Card>
@@ -289,373 +379,6 @@ const CorporateRoster = () => {
                 />
             )}
         </div>
-
-        // <div className="max-w-4xl mx-auto p-4 md:p-8 bg-gray-50/30 min-h-screen font-sans">
-
-        //     {/* Unified Header */}
-        //     <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-gray-200 pb-8">
-        //         <div className="flex items-center gap-4">
-        //             <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-100">
-        //                 <Briefcase className="w-6 h-6 text-white" />
-        //             </div>
-        //             <div>
-        //                 <h1 className="text-2xl font-black text-gray-900 tracking-tight">Roster Generator</h1>
-        //                 <p className="text-sm text-gray-500 font-medium">Corporate Operations Management</p>
-        //             </div>
-        //         </div>
-
-        //         <motion.button
-        //             onClick={handleCreateRoster}
-        //             disabled={!isValid || isGenerating}
-        //             whileHover={isValid ? { scale: 1.02 } : {}}
-        //             whileTap={isValid ? { scale: 0.98 } : {}}
-        //             className={cn(
-        //                 "flex items-center gap-2.5 px-8 py-3.5 rounded-[1.25rem] font-bold text-sm transition-all shadow-xl",
-        //                 isValid
-        //                     ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
-        //                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
-        //             )}
-        //         >
-        //             {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-        //             {isGenerating ? 'Processing...' : 'Generate Roster'}
-        //         </motion.button>
-        //     </header>
-
-        //     {/* THE SINGLE FORM CONTAINER */}
-        //     <div className="bg-white border border-gray-200 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 overflow-hidden">
-
-        //         <div className="p-8 md:p-12 space-y-12">
-
-        //             {/* Step 1: Timeframe Selection */}
-        //             <section className="relative">
-        //                 <div className="flex items-center gap-3 mb-8">
-        //                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black">01</span>
-        //                     <h3 className="font-bold text-gray-900 uppercase tracking-widest text-xs">Scheduling Period</h3>
-        //                 </div>
-
-        //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
-        //                     <div className="space-y-2">
-        //                         <label className="text-[11px] font-bold text-gray-400 uppercase ml-1">Target Month</label>
-        //                         <select
-        //                             value={selectedMonth}
-        //                             onChange={e => setSelectedMonth(e.target.value)}
-        //                             className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-        //                         >
-        //                             {availableMonths.map(m => <option key={m}>{m}</option>)}
-        //                         </select>
-        //                     </div>
-        //                     <div className="space-y-2">
-        //                         <label className="text-[11px] font-bold text-gray-400 uppercase ml-1">Fiscal Year</label>
-        //                         <input
-        //                             type="number"
-        //                             value={selectedYear}
-        //                             onChange={e => setSelectedYear(e.target.value)}
-        //                             className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 text-sm font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-        //                         />
-        //                     </div>
-        //                 </div>
-        //             </section>
-
-        //             {/* Step 2: Workforce Allocation */}
-        //             <section>
-        //                 <div className="flex items-center justify-between mb-8">
-        //                     <div className="flex items-center gap-3">
-        //                         <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black">02</span>
-        //                         <h3 className="font-bold text-gray-900 uppercase tracking-widest text-xs">Workforce Selection</h3>
-        //                     </div>
-
-        //                     <select
-        //                         defaultValue=""
-        //                         onChange={e => { if (e.target.value && !selectedEmployees.includes(e.target.value)) setSelectedEmployees(p => [...p, e.target.value]); e.target.value = ""; }}
-        //                         className="text-[11px] font-black bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl hover:bg-indigo-100 cursor-pointer border-none"
-        //                     >
-        //                         <option value="" disabled>+ ADD STAFF</option>
-        //                         {availableEmployees.filter(e => !selectedEmployees.includes(e.id)).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-        //                     </select>
-        //                 </div>
-
-        //                 <div className="flex flex-wrap gap-3 min-h-[100px] p-6 border-2 border-dashed border-gray-100 rounded-3xl">
-        //                     <AnimatePresence mode="popLayout">
-        //                         {selectedEmployees.map(empId => {
-        //                             const emp = availableEmployees.find(e => e.id === empId);
-        //                             return (
-        //                                 <motion.div
-        //                                     key={empId}
-        //                                     layout
-        //                                     initial={{ opacity: 0, scale: 0.9 }}
-        //                                     animate={{ opacity: 1, scale: 1 }}
-        //                                     exit={{ opacity: 0, scale: 0.9 }}
-        //                                     className="flex items-center gap-2 bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-2xl shadow-sm group hover:border-indigo-300 transition-all"
-        //                                 >
-        //                                     <div className={cn("w-2 h-2 rounded-full", emp.isSenior ? "bg-amber-400" : "bg-indigo-400")} />
-        //                                     <span className="text-xs font-bold text-gray-700">{emp.name}</span>
-        //                                     {emp.isSenior && <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />}
-        //                                     <button onClick={() => setSelectedEmployees(p => p.filter(id => id !== empId))} className="p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors">
-        //                                         <X className="w-3.5 h-3.5" />
-        //                                     </button>
-        //                                 </motion.div>
-        //                             );
-        //                         })}
-        //                     </AnimatePresence>
-        //                     {selectedEmployees.length === 0 && (
-        //                         <div className="w-full flex flex-col items-center justify-center text-gray-300 italic py-4">
-        //                             <Users className="w-8 h-8 mb-2 opacity-20" />
-        //                             <p className="text-xs font-medium">No employees assigned to this cycle</p>
-        //                         </div>
-        //                     )}
-        //                 </div>
-        //             </section>
-
-        //             {/* Step 3: Shift Logic & Constraints */}
-        //             <section>
-        //                 <div className="flex items-center gap-3 mb-8">
-        //                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-black">03</span>
-        //                     <h3 className="font-bold text-gray-900 uppercase tracking-widest text-xs">Operational Rules</h3>
-        //                 </div>
-
-        //                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        //                     <div className="space-y-2">
-        //                         <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Working Days</label>
-        //                         <div className="relative">
-        //                             <input type="number" value={daysPerEmployee} onChange={e => setDaysPerEmployee(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-black text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500/10" />
-        //                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">DAYS</span>
-        //                         </div>
-        //                     </div>
-
-        //                     <div className="space-y-2">
-        //                         <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Rotation Off-Days</label>
-        //                         <div className="relative">
-        //                             <input type="number" value={offDaysPerRotation} onChange={e => setOffDaysPerRotation(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-black text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500/10" />
-        //                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">PER CYCLE</span>
-        //                         </div>
-        //                     </div>
-
-        //                     <div className="space-y-2">
-        //                         <label className="text-[10px] font-black text-gray-400 uppercase ml-1">Min. Rest Period</label>
-        //                         <div className="relative">
-        //                             <input type="number" value={consecutiveShiftGapHours} onChange={e => setConsecutiveShiftGapHours(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm font-black text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500/10" />
-        //                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">HOURS</span>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-
-        //                 {/* Binary Toggles */}
-        //                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-        //                     <label className={cn("flex items-center justify-between p-5 rounded-3xl border-2 transition-all cursor-pointer", includeWeekends ? "border-indigo-600 bg-indigo-50/30" : "border-gray-100 bg-white hover:border-gray-200")}>
-        //                         <div className="flex flex-col">
-        //                             <span className="font-bold text-gray-900 text-sm">Weekend Operations</span>
-        //                             <span className="text-[11px] text-gray-500 font-medium">Include Sat/Sun in normal rotation</span>
-        //                         </div>
-        //                         <input type="checkbox" checked={includeWeekends} onChange={() => setIncludeWeekends(!includeWeekends)} className="w-5 h-5 rounded-lg border-gray-300 text-indigo-600 focus:ring-0" />
-        //                     </label>
-
-        //                     <label className={cn("flex items-center justify-between p-5 rounded-3xl border-2 transition-all cursor-pointer", requireSeniorOnShift ? "border-amber-400 bg-amber-50/30" : "border-gray-100 bg-white hover:border-gray-200")}>
-        //                         <div className="flex flex-col">
-        //                             <span className="font-bold text-gray-900 text-sm flex items-center gap-2">Senior Lead Required <ShieldAlert className="w-3.5 h-3.5 text-amber-500" /></span>
-        //                             <span className="text-[11px] text-gray-500 font-medium">Guarantee 1+ senior staff per shift</span>
-        //                         </div>
-        //                         <input type="checkbox" checked={requireSeniorOnShift} onChange={() => setRequireSeniorOnShift(!requireSeniorOnShift)} className="w-5 h-5 rounded-lg border-gray-300 text-amber-500 focus:ring-0" />
-        //                     </label>
-        //                 </div>
-        //             </section>
-        //         </div>
-
-        //         {/* Form Footer */}
-        //         <div className="bg-gray-950 p-6 flex items-center justify-center gap-4">
-        //             <div className="flex items-center gap-2 text-white/50 text-[10px] font-bold tracking-widest uppercase">
-        //                 <ShieldCheck className="w-4 h-4 text-indigo-400" />
-        //                 Compliance-Validated Engine
-        //             </div>
-        //         </div>
-        //     </div>
-        // </div>
-
-        // <div className="max-w-7xl mx-auto p-6 md:p-8 bg-slate-50 min-h-screen font-sans text-slate-900">
-
-        //     {/* Modern, Lean Header */}
-        //     <header className="mb-8 flex items-center justify-between gap-6 px-4 pb-6 border-b border-slate-200">
-        //         <div className="flex items-center gap-4">
-        //             <div className="bg-slate-900 p-2.5 rounded-xl shadow-lg shadow-slate-200">
-        //                 <Briefcase className="w-5 h-5 text-white" />
-        //             </div>
-        //             <div>
-        //                 <h1 className="text-xl font-black text-slate-950 tracking-tight">Generate Corporate Roster</h1>
-        //                 <p className="text-sm text-slate-500 font-medium leading-relaxed">Operational Workforce Management & Assignment Console</p>
-        //             </div>
-        //         </div>
-
-        //         <motion.button
-        //             onClick={handleCreateRoster}
-        //             disabled={!isValid || isGenerating}
-        //             whileHover={isValid ? { scale: 1.02 } : {}}
-        //             whileTap={isValid ? { scale: 0.98 } : {}}
-        //             className={cn(
-        //                 "flex items-center gap-2.5 px-8 py-3 rounded-2xl font-bold text-sm transition-all shadow-xl",
-        //                 isValid
-        //                     ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700"
-        //                     : "bg-slate-200 text-slate-400 cursor-not-allowed"
-        //             )}
-        //         >
-        //             {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
-        //             {isGenerating ? 'Processing...' : 'Run Algorithm'}
-        //         </motion.button>
-        //     </header>
-
-        //     {/* THE SINGLE UNIFIED FORM CONTAINER */}
-        //     <div className="bg-white border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-100/70 overflow-hidden">
-
-        //         {/* 1. Main Configuration Bar */}
-        //         <div className="flex flex-col lg:flex-row items-stretch border-b border-slate-100">
-
-        //             {/* TIME PERIOD SECTION */}
-        //             <div className="p-8 flex items-center gap-8 bg-slate-50/50 border-r border-slate-100 min-w-[320px]">
-        //                 <div className="flex flex-col gap-1.5 flex-1">
-        //                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Target Period</span>
-        //                     <div className="flex items-center gap-3">
-        //                         <select
-        //                             value={selectedMonth}
-        //                             onChange={e => setSelectedMonth(e.target.value)}
-        //                             className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
-        //                         >
-        //                             {availableMonths.map(m => <option key={m}>{m}</option>)}
-        //                         </select>
-        //                         <input
-        //                             type="number"
-        //                             value={selectedYear}
-        //                             onChange={e => setSelectedYear(e.target.value)}
-        //                             className="w-24 bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm font-black text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
-        //                         />
-        //                     </div>
-        //                 </div>
-        //             </div>
-
-        //             {/* RULES SECTION (Compact Number Fields) */}
-        //             <div className="p-8 flex-1 flex flex-wrap items-center gap-x-12 gap-y-6">
-        //                 <div className="flex flex-col gap-1.5">
-        //                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Roster Logic</span>
-        //                     <div className="flex items-center gap-10">
-        //                         <div className="flex items-center gap-2">
-        //                             <label className="text-xs font-bold text-slate-600 whitespace-nowrap">Assign Days</label>
-        //                             <input
-        //                                 type="number"
-        //                                 value={daysPerEmployee}
-        //                                 onChange={e => setDaysPerEmployee(e.target.value)}
-        //                                 className="w-16 bg-slate-100 border-none rounded-lg px-2.5 py-2 text-sm font-black text-center text-indigo-600"
-        //                             />
-        //                         </div>
-        //                         <div className="flex items-center gap-2">
-        //                             <label className="text-xs font-bold text-slate-600 whitespace-nowrap">Rest Gap</label>
-        //                             <div className="flex items-center bg-slate-100 rounded-lg px-1.5 gap-1">
-        //                                 <input
-        //                                     type="number"
-        //                                     value={consecutiveShiftGapHours}
-        //                                     onChange={e => setConsecutiveShiftGapHours(e.target.value)}
-        //                                     className="w-12 bg-transparent border-none py-2 text-sm font-black text-center text-indigo-600 outline-none"
-        //                                 />
-        //                                 <span className="text-[10px] font-bold text-slate-400 pr-1">HRS</span>
-        //                             </div>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-
-        //                 {/* LOGIC TOGGLES (MODERN SWITCHES) */}
-        //                 <div className="flex items-center gap-8 border-l border-slate-100 pl-12 pt-4 lg:pt-0">
-        //                     <label className="flex items-center gap-2 cursor-pointer group">
-        //                         <div className="relative">
-        //                             <input
-        //                                 type="checkbox"
-        //                                 checked={includeWeekends}
-        //                                 onChange={() => setIncludeWeekends(!includeWeekends)}
-        //                                 className="peer sr-only"
-        //                             />
-        //                             <div className="w-10 h-5 bg-slate-200 rounded-full peer-checked:bg-indigo-600 transition-colors" />
-        //                             <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform" />
-        //                         </div>
-        //                         <span className="text-sm font-bold text-slate-800">Weekends</span>
-        //                     </label>
-
-        //                     <label className="flex items-center gap-2 cursor-pointer group">
-        //                         <div className="relative">
-        //                             <input
-        //                                 type="checkbox"
-        //                                 checked={requireSeniorOnShift}
-        //                                 onChange={() => setRequireSeniorOnShift(!requireSeniorOnShift)}
-        //                                 className="peer sr-only"
-        //                             />
-        //                             <div className="w-10 h-5 bg-slate-200 rounded-full peer-checked:bg-amber-500 transition-colors" />
-        //                             <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform" />
-        //                         </div>
-        //                         <span className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-        //                             Senior Presence <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-        //                         </span>
-        //                     </label>
-        //                 </div>
-        //             </div>
-        //         </div>
-
-        //         {/* 2. Workforce Management Area (Integrated) */}
-        //         <div className="p-10 bg-white">
-        //             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        //                 <div className="flex items-center gap-4">
-        //                     <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100 shadow-inner">
-        //                         <Users className="w-6 h-6 text-indigo-600" />
-        //                     </div>
-        //                     <div>
-        //                         <h3 className="text-xl font-bold text-slate-950">Participating Workforce Allocation</h3>
-        //                         <p className="text-sm text-indigo-600 font-semibold">{selectedEmployees.length} staff assigned to this rotation</p>
-        //                     </div>
-        //                 </div>
-
-        //                 <div className="relative group">
-        //                     <select
-        //                         defaultValue=""
-        //                         onChange={e => { if (e.target.value && !selectedEmployees.includes(e.target.value)) setSelectedEmployees(p => [...p, e.target.value]); e.target.value = ""; }}
-        //                         className="appearance-none bg-slate-900 text-white text-[11px] font-black px-6 py-3 rounded-xl pr-12 cursor-pointer hover:bg-slate-800 transition-colors shadow-lg"
-        //                     >
-        //                         <option value="" disabled>+ ADD STAFF MEMBER</option>
-        //                         {availableEmployees.filter(e => !selectedEmployees.includes(e.id)).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-        //                     </select>
-        //                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none group-hover:text-white" />
-        //                 </div>
-        //             </div>
-
-        //             <div className="flex flex-wrap gap-3 p-1 min-h-[120px]">
-        //                 <AnimatePresence>
-        //                     {selectedEmployees.map(empId => {
-        //                         const emp = availableEmployees.find(e => e.id === empId);
-        //                         return (
-        //                             <motion.div
-        //                                 key={empId}
-        //                                 layout
-        //                                 initial={{ opacity: 0, y: 10 }}
-        //                                 animate={{ opacity: 1, y: 0 }}
-        //                                 exit={{ opacity: 0, scale: 0.9 }}
-        //                                 className="flex items-center gap-3 bg-slate-50 border border-slate-100 pl-4 pr-3 py-2.5 rounded-xl group hover:border-indigo-300 hover:bg-white transition-all shadow-sm"
-        //                             >
-        //                                 <div className={cn("w-2 h-2 rounded-full", emp.isSenior ? "bg-amber-500" : "bg-indigo-500")} />
-        //                                 <span className="text-sm font-bold text-slate-700">{emp.name}</span>
-        //                                 {emp.isSenior && <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />}
-        //                                 <button
-        //                                     onClick={() => setSelectedEmployees(p => p.filter(id => id !== empId))}
-        //                                     className="ml-2 p-1 rounded-md hover:bg-red-50 hover:text-red-500 text-slate-300 transition-colors"
-        //                                 >
-        //                                     <X className="w-3.5 h-3.5" />
-        //                                 </button>
-        //                             </motion.div>
-        //                         )
-        //                     })}
-        //                 </AnimatePresence>
-        //                 {selectedEmployees.length === 0 && (
-        //                     <div className="w-full flex flex-col items-center justify-center text-center p-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-        //                         <Users className="w-12 h-12 text-slate-200 mb-3" />
-        //                         <div className="text-sm font-bold text-slate-400">No staff members allocated yet</div>
-        //                         <p className="text-xs text-slate-400 mt-1">Assign staff using the search bar above to begin roster generation</p>
-        //                     </div>
-        //                 )}
-        //             </div>
-        //         </div>
-        //     </div>
-        // </div>
     );
 };
 

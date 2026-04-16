@@ -60,3 +60,25 @@
   0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
   40% { transform: scale(1.0); opacity: 1; }
 }
+
+/* Custom Calendar Styling */
+.selected-date-tile {
+    background: #4f46e5 !important; /* Indigo-600 */
+    color: white !important;
+    border-radius: 12px !important;
+}
+
+.react-calendar {
+    border: none !important;
+    font-family: inherit !important;
+    width: 100% !important;
+}
+
+.react-calendar__tile--now {
+    background: #f3f4f6 !important;
+    border-radius: 12px;
+}
+
+.react-calendar__tile:hover {
+    border-radius: 12px !important;
+}
