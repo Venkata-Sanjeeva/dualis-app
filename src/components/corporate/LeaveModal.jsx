@@ -1,25 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, parseISO } from 'date-fns';
 import { CalendarDays, X, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'react-calendar/dist/Calendar.css';
+import axios from 'axios';
 
-const LeaveModal = ({ employee, onClose, onSave }) => {
+const API_URL = process.env.REACT_APP_API_URL;
+
+const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
+
     const [selectedDates, setSelectedDates] = useState([]);
+
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 1. Fetch existing leaves from Backend on Mount
+    useEffect(() => {
+        const fetchExistingLeaves = async () => {
+            try {
+                setIsLoading(true);
+                const response = await axios.get(`${API_URL}/leaves/month/read/all/${employee.empId}?year=${format(rosterDate, 'yyyy')}&month=${format(rosterDate, 'MM')}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                // Assuming response.data.data is a list of LeaveResponse objects
+                // We extract the date strings and convert them to JS Date objects
+                const datesFromDB = response.data.data.map(leave => parseISO(leave.leaveDate));
+                setSelectedDates(datesFromDB);
+            } catch (err) {
+                console.error("Error fetching leaves:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (employee?.empId) {
+            fetchExistingLeaves();
+        }
+    }, [employee]);
 
     const toggleDate = (date) => {
         const exists = selectedDates.find(d => isSameDay(d, date));
         if (exists) {
             setSelectedDates(prev => prev.filter(d => !isSameDay(d, date)));
         } else {
-            setSelectedDates(prev => [...prev, date].sort((a, b) => a - b));
+            setSelectedDates(prev => [...prev, date]);
         }
     };
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
@@ -41,17 +72,35 @@ const LeaveModal = ({ employee, onClose, onSave }) => {
                 </div>
 
                 {/* Calendar Body */}
-                <div className="p-6">
-                    <div className="custom-calendar-container">
-                        <Calendar
-                            onClickDay={toggleDate}
-                            tileClassName={({ date }) => {
-                                if (selectedDates.find(d => isSameDay(d, date))) {
-                                    return 'selected-date-tile';
+                <div className="px-6 text-center">
+                    <span className="text-sm font-extrabold text-gray-900 tracking-tight">
+                        {format(rosterDate, 'MMMM yyyy')}
+                    </span>
+
+                    <div className="p-6">
+                        {isLoading ? (
+                            <div className="flex justify-center py-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                            </div>
+                        ) : (
+                            <Calendar
+                                // 1. Set the initial view to the roster month
+                                activeStartDate={rosterDate}
+
+                                // 2. Disable the "Prev" and "Next" buttons
+                                showNavigation={false}
+
+                                // 3. Disable dates that don't belong to this month
+                                tileDisabled={({ date }) =>
+                                    date.getMonth() !== rosterDate.getMonth()
                                 }
-                                return null;
-                            }}
-                        />
+
+                                onClickDay={toggleDate}
+                                tileClassName={({ date }) =>
+                                    selectedDates.find(d => isSameDay(d, date)) ? 'selected-date-tile' : null
+                                }
+                            />
+                        )}
                     </div>
 
                     {/* Selected Summary Area */}
@@ -78,13 +127,13 @@ const LeaveModal = ({ employee, onClose, onSave }) => {
 
                 {/* Footer Actions */}
                 <div className="p-6 bg-gray-50 flex gap-3">
-                    <button 
+                    <button
                         onClick={onClose}
                         className="flex-1 px-4 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition"
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button
                         disabled={selectedDates.length === 0}
                         onClick={() => onSave(employee.empId, selectedDates)}
                         className="flex-1 bg-indigo-600 disabled:bg-gray-300 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition flex items-center justify-center gap-2"

@@ -25,6 +25,13 @@ const availableMonths = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+const getRosterDate = (monthName) => {
+    const monthIndex = availableMonths.indexOf(monthName);
+    const currentYear = new Date().getFullYear();
+    // Create a date object for the 1st of that month
+    return new Date(currentYear, monthIndex, 1);
+};
+
 // Reusable Components for consistency
 export const Card = ({ children, className }) => (
     <div className={cn("bg-white p-6 rounded-2xl border border-gray-100 shadow-sm", className)}>
@@ -84,7 +91,8 @@ const CorporateRoster = () => {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoadingEmployees(true);
-            const data = await axios.get(`${API_URL}/employees/read/all`, {
+
+            const res = await axios.get(`${API_URL}/employees/read/all`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -93,9 +101,7 @@ const CorporateRoster = () => {
                 setIsLoadingEmployees(false);
             }).finally(() => setIsLoadingEmployees(false));
 
-            console.log('Fetched Employees from Backend:', data?.data?.data || []);
-
-            setAvailableEmployees(data?.data?.data || []);
+            setAvailableEmployees(res?.data?.data || []);
         };
 
         fetchData();
@@ -374,6 +380,7 @@ const CorporateRoster = () => {
             {isLeaveModalOpen && currentEmpForLeave && (
                 <LeaveModal
                     employee={currentEmpForLeave}
+                    rosterDate={getRosterDate(selectedMonth)}
                     onClose={() => setIsLeaveModalOpen(false)}
                     onSave={handleSaveLeaves}
                 />
