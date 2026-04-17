@@ -116,15 +116,29 @@ const CorporateRoster = () => {
         setIsGenerating(true);
         // Combine all data for backend
         const configPayload = {
-            base: { selectedEmployees, selectedMonth, selectedYear },
-            constraints: { daysPerEmployee, offDaysPerRotation, includeWeekends, consecutiveShiftGapHours },
+            base: { selectedEmployees, selectedMonth, selectedYear: String(selectedYear) },
+            constraints: { daysPerEmployee: Number(daysPerEmployee), offDaysPerRotation: Number(offDaysPerRotation), includeWeekends, consecutiveShiftGapHours: Number(consecutiveShiftGapHours) },
             shifts: activeShifts,
-            goals: { requireSeniorOnShift }
+            requireSeniorOnShift
         };
 
-        console.log('Sending Configuration to Backend:', configPayload);
+        console.log('Sending Configuration to Backend:', JSON.stringify(configPayload));
+        axios.post(`${API_URL}/roster/create`, configPayload, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        }).then(response => {
+            if (response.status === 200) {
+                console.log("Roster generated successfully:", response.data);
+                // Optional: Show a success toast here
+            }
+        }).catch(error => {
+            console.error("Error generating roster:", error);
+            // Optional: Show an error toast here
+        }).finally(() => setIsGenerating(false));
+
         // Mimic API delay
-        setTimeout(() => setIsGenerating(false), 2000);
+        // setTimeout(() => setIsGenerating(false), 2000);
     };
 
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
