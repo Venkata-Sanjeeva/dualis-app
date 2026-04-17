@@ -132,9 +132,9 @@ const CorporateRoster = () => {
 
     const handleSaveLeaves = async (empId, selectedDates) => {
         // 1. Transform dates to yyyy-MM-dd format for your EmployeeLeaveRequest DTO
-        const leaveRequests = selectedDates.map(date => ({
+        const leaveRequests = selectedDates.map(obj => ({
             empId: empId,
-            leaveDate: format(date, 'yyyy-MM-dd')
+            leaveDate: format(obj.leaveDate, 'yyyy-MM-dd')
         }));
 
         try {

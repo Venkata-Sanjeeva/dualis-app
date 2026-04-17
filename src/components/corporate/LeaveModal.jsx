@@ -25,7 +25,8 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
 
                 // Assuming response.data.data is a list of LeaveResponse objects
                 // We extract the date strings and convert them to JS Date objects
-                const datesFromDB = response.data.data.map(leave => parseISO(leave.leaveDate));
+                const datesFromDB = response.data.data.map(leave => { return { leaveDate: parseISO(leave.leaveDate), leaveId: leave.leaveId }; });
+                console.log("Fetched Leaves:", datesFromDB);
                 setSelectedDates(datesFromDB);
             } catch (err) {
                 console.error("Error fetching leaves:", err);
@@ -40,12 +41,29 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
     }, [employee]);
 
     const toggleDate = (date) => {
-        const exists = selectedDates.find(d => isSameDay(d, date));
+        const exists = selectedDates.find(d => isSameDay(d.leaveDate, date));
         if (exists) {
-            setSelectedDates(prev => prev.filter(d => !isSameDay(d, date)));
+            setSelectedDates(prev => prev.filter(d => !isSameDay(d.leaveDate, date)));
         } else {
-            setSelectedDates(prev => [...prev, date]);
+            setSelectedDates(prev => [...prev, { leaveDate: date }]);
         }
+    };
+
+    const deleteDate = async (date, leaveId) => {
+
+        if (leaveId) {
+            console.log("Deleting leave with ID:", leaveId);
+
+            try {
+                await axios.delete(`${API_URL}/leaves/delete/${leaveId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+            } catch (err) {
+                console.error("Error deleting leave:", err);
+            }
+        }
+        
+        setSelectedDates(prev => prev.filter(d => !isSameDay(d.leaveDate, date)));
     };
 
     return (
@@ -97,7 +115,7 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
 
                                 onClickDay={toggleDate}
                                 tileClassName={({ date }) =>
-                                    selectedDates.find(d => isSameDay(d, date)) ? 'selected-date-tile' : null
+                                    selectedDates.find(obj => isSameDay(obj.leaveDate, date)) ? 'selected-date-tile' : null
                                 }
                             />
                         )}
@@ -108,16 +126,16 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Selected ({selectedDates.length})</p>
                         <div className="flex flex-wrap gap-2 min-h-8">
                             <AnimatePresence>
-                                {selectedDates.map(date => (
+                                {selectedDates.map(obj => (
                                     <motion.span
-                                        key={date.toISOString()}
+                                        key={obj.leaveDate.toISOString()}
                                         initial={{ opacity: 0, scale: 0.8 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.8 }}
                                         className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-100"
                                     >
-                                        {format(date, 'MMM dd')}
-                                        <X className="w-3 h-3 cursor-pointer" onClick={() => toggleDate(date)} />
+                                        {format(obj.leaveDate, 'MMM dd')}
+                                        <X className="w-3 h-3 cursor-pointer" onClick={() => deleteDate(obj.leaveDate, obj.leaveId)} />
                                     </motion.span>
                                 ))}
                             </AnimatePresence>
