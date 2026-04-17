@@ -18,6 +18,7 @@ import RegisterPage from './components/pages/RegisterPage';
 import TimetableCreator from './components/TimetableCreator';
 import TimetablePreview from './components/TimetablePreview';
 import EmployeesPage from './components/corporate/EmployeesPage';
+import RosterChart from './components/corporate/RosterChart';
 
 const App = () => {
     const [appMode, setAppMode] = useState('school');
@@ -63,6 +64,7 @@ const App = () => {
                             <Routes>
                                 <Route path="roster" element={<CorporateRoster />} />
                                 <Route path="employees" element={<EmployeesPage />} />
+                                <Route path="chart" element={<RosterChart />} />
                             </Routes>
                         </ProtectedRoute>
                     } />

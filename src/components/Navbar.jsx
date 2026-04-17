@@ -42,6 +42,7 @@ const Navbar = ({ appMode, setAppMode }) => {
             { name: 'Dashboard', icon: LayoutGrid, href: '/' },
             { name: 'Roster Planner', icon: Briefcase, href: '/corporate/roster' },
             { name: 'Employees', icon: Users, href: '/corporate/employees' },
+            { name: 'Roster Chart', icon: Users, href: '/corporate/chart' },
         ]
         : [
             { name: 'Dashboard', icon: LayoutGrid, href: '/' },
