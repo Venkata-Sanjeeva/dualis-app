@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import {
     Users, Calendar, Clock, AlertCircle,
     ArrowUpRight, Plus, FileText, CheckCircle2,
-    LayoutGrid
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -13,7 +12,7 @@ const cn = (...inputs) => twMerge(clsx(inputs));
 
 const Dashboard = ({ appMode }) => {
     const isCorp = appMode === 'corporate';
-    const theme = isCorp ? 'blue' : 'emerald';
+    // const theme = isCorp ? 'blue' : 'emerald';
 
     const nav = useNavigate();
 

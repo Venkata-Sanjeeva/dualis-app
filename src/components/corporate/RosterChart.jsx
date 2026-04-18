@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Users, FileDown, ChevronRight, Inbox } from 'lucide-react';
+import { Calendar, Users, FileDown, Inbox } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 

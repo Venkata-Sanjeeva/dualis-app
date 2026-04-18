@@ -6,7 +6,6 @@ import { twMerge } from 'tailwind-merge';
 import { format } from 'date-fns';
 import axios from 'axios';
 import LeaveModal from './LeaveModal';
-import StatSkeleton from '../loaders/StatsSkeleton';
 
 // Helper for conditional classes
 const cn = (...inputs) => twMerge(clsx(inputs));

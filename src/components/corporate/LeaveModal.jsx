@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { CalendarDays, X, CheckCircle2 } from 'lucide-react';
@@ -38,7 +38,7 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
         if (employee?.empId) {
             fetchExistingLeaves();
         }
-    }, [employee]);
+    }, [employee, rosterDate]);
 
     const toggleDate = (date) => {
         const exists = selectedDates.find(d => isSameDay(d.leaveDate, date));

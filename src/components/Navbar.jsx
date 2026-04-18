@@ -57,14 +57,13 @@ const Navbar = ({ appMode, setAppMode }) => {
 
                     <div className="flex items-center gap-8">
                         {/* --- DYNAMIC LOGO SECTION --- */}
-                        <div 
-                            onClick={() => navigate('/')} 
+                        <div
+                            onClick={() => navigate('/')}
                             className="flex-shrink-0 flex items-center gap-2.5 group cursor-pointer"
                         >
-                            <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-                                !isLoggedIn ? 'bg-slate-800' : // Neutral icon background when logged out
-                                appMode === 'corporate' ? 'bg-blue-600' : 'bg-emerald-600'
-                            }`}>
+                            <div className={`p-2.5 rounded-xl transition-all duration-300 ${!isLoggedIn ? 'bg-slate-800' : // Neutral icon background when logged out
+                                    appMode === 'corporate' ? 'bg-blue-600' : 'bg-emerald-600'
+                                }`}>
                                 {!isLoggedIn ? (
                                     <LayoutGrid className="w-5 h-5 text-white" /> // Neutral icon
                                 ) : appMode === 'corporate' ? (
@@ -73,11 +72,10 @@ const Navbar = ({ appMode, setAppMode }) => {
                                     <BookOpenText className="w-5 h-5 text-white" />
                                 )}
                             </div>
-                            
-                            <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r tracking-tight transition-all duration-500 ${
-                                !isLoggedIn ? GENERIC_COLOR : 
-                                appMode === 'corporate' ? 'from-blue-600 to-indigo-600' : 'from-emerald-600 to-teal-600'
-                            }`}>
+
+                            <span className={`text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r tracking-tight transition-all duration-500 ${!isLoggedIn ? GENERIC_COLOR :
+                                    appMode === 'corporate' ? 'from-blue-600 to-indigo-600' : 'from-emerald-600 to-teal-600'
+                                }`}>
                                 {/* Logic: Show Generic name if not logged in, otherwise show Mode name */}
                                 {!isLoggedIn ? GENERIC_NAME : (appMode === 'corporate' ? 'CorpSync' : 'Schedula')}
                             </span>
@@ -154,46 +152,31 @@ const Navbar = ({ appMode, setAppMode }) => {
             </div>
 
             {/* Mobile Menu */}
+
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
+                        className="md:hidden bg-white border-b border-gray-100 overflow-hidden shadow-inner"
                     >
-                        <div className="px-4 pt-2 pb-6 space-y-2">
-                            {/* Main Navigation Links */}
+                        <div className="px-4 pt-2 pb-6 space-y-1">
+                            {/* Main Navigation Links - Now clearly visible on mobile */}
+                            <p className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                Menu
+                            </p>
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.name}
-                                    to={link.href} // Change 'href' to 'to'
-                                    className="flex items-center gap-2 px-3 py-2 ...">
-                                    <link.icon className="w-4 h-4" />
+                                    to={link.href}
+                                    onClick={() => setIsOpen(false)} // Close menu on click
+                                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                                >
+                                    <link.icon className={`w-5 h-5 ${appMode === 'corporate' ? 'text-blue-600' : 'text-emerald-600'}`} />
                                     {link.name}
                                 </Link>
                             ))}
-
-                            {/* --- NEW: MOBILE PROFILE SECTION --- */}
-                            <div className="pt-4 mt-4 border-t border-gray-100">
-                                <div className="flex items-center gap-3 px-4 py-3">
-                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
-                                        AD
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900">Admin User</p>
-                                        <p className="text-xs text-gray-500">admin@schedula.com</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-1 mt-2">
-                                    <a href="#profile" className="block px-4 py-3 text-base font-medium text-gray-600 hover:bg-emerald-50 rounded-xl">
-                                        Admin Settings
-                                    </a>
-                                    <a href="#logout" className="block px-4 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-xl">
-                                        Sign out
-                                    </a>
-                                </div>
-                            </div>
                         </div>
                     </motion.div>
                 )}

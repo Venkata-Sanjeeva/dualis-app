@@ -12,7 +12,7 @@ const TimetableSheet = ({ className }) => {
         // ... continue the pattern
     };
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    // const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     return (
         <div className="max-w-7xl mx-auto p-6 md:p-10 space-y-8 bg-white rounded-3xl border border-gray-100 shadow-sm mt-8">
