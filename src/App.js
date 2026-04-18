@@ -8,7 +8,7 @@ import TeacherMapping from './components/school/TeacherMapping';
 import TimetableSheet from './components/school/TimetableSheet';
 
 // Corporate Components
-import CorporateRoster from './components/corporate/CorporateRoster'
+// import CorporateRoster from './components/corporate/CorporateRoster'
 import Dashboard from './components/Dashboard';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -19,6 +19,7 @@ import TimetableCreator from './components/TimetableCreator';
 import TimetablePreview from './components/TimetablePreview';
 import EmployeesPage from './components/corporate/EmployeesPage';
 import RosterChart from './components/corporate/RosterChart';
+import CorporateRosterVersion1 from './components/corporate/CorporateRosterVersion1';
 
 const App = () => {
     const [appMode, setAppMode] = useState('school');
@@ -62,7 +63,7 @@ const App = () => {
                     <Route path="/corporate/*" element={
                         <ProtectedRoute appMode={appMode} requiredMode="corporate">
                             <Routes>
-                                <Route path="roster" element={<CorporateRoster />} />
+                                <Route path="roster" element={<CorporateRosterVersion1 />} />
                                 <Route path="employees" element={<EmployeesPage />} />
                                 <Route path="chart" element={<RosterChart />} />
                             </Routes>
