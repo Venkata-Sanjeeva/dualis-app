@@ -72,7 +72,7 @@ const CorporateRosterVersion1 = () => {
         const fetchEmployees = async () => {
             setIsLoading(true);
             try {
-                const res = await axios.get(`${API_URL}/employees/read/all`, {
+                const res = await axios.get(`${API_URL}/employees/v1/read/all`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 setAvailableEmployees(res?.data?.data || []);
@@ -112,9 +112,11 @@ const CorporateRosterVersion1 = () => {
             constraints
         };
 
+        console.log("Generating with payload:", payload);
+
         try {
             // Simulate or call your generation API
-            await axios.post(`${API_URL}/roster/create/v1`, payload, {
+            await axios.post(`${API_URL}/roster/v1/create`, payload, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             // await new Promise(resolve => setTimeout(resolve, 2000)); // Demo delay
@@ -134,7 +136,7 @@ const CorporateRosterVersion1 = () => {
         }));
 
         try {
-            const res = await axios.post(`${API_URL}/leaves/create/multiple`, leaveRequests, {
+            const res = await axios.post(`${API_URL}/leaves/v1/create/multiple`, leaveRequests, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (res.status === 201) setIsLeaveModalOpen(false);
@@ -337,6 +339,14 @@ const CorporateRosterVersion1 = () => {
                                     value={constraints.daysPerEmployee}
                                     onChange={(e) => setConstraints({...constraints, daysPerEmployee: e.target.value})}
                                 />
+
+                                <InputField 
+                                    label="Off Days per Rotation" 
+                                    type="number" 
+                                    value={constraints.offDaysPerRotation}
+                                    onChange={(e) => setConstraints({...constraints, offDaysPerRotation: e.target.value})}
+                                />
+
                                 <div className="pt-4 space-y-3">
                                     <label className="flex items-center gap-3 cursor-pointer">
                                         <input 

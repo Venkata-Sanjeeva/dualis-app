@@ -31,7 +31,7 @@ const AddEmployeeForm = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${API_URL}/employees/create`, employeeData, {
+            const response = await axios.post(`${API_URL}/employees/v1/create`, employeeData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`

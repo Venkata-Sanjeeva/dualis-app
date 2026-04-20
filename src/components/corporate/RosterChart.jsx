@@ -16,7 +16,7 @@ const RosterDashboard = () => {
     useEffect(() => {
         const fetchRosters = async () => {
             try {
-                const response = await axios.get(`${API_URL}/roster/read/all`, {
+                const response = await axios.get(`${API_URL}/roster/v1/read/all`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 const data = response.data.data;
@@ -33,7 +33,7 @@ const RosterDashboard = () => {
         setLoading(true);
         setSelectedRosterId(id);
         try {
-            const response = await axios.get(`${API_URL}/roster/generate/${id}/chart`, {
+            const response = await axios.get(`${API_URL}/roster/v1/generate/${id}/chart`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             const data = response.data.data;

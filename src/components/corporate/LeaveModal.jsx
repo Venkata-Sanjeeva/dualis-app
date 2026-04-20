@@ -19,7 +19,7 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
         const fetchExistingLeaves = async () => {
             try {
                 setIsLoading(true);
-                const response = await axios.get(`${API_URL}/leaves/month/read/all/${employee.empId}?year=${format(rosterDate, 'yyyy')}&month=${format(rosterDate, 'MM')}`, {
+                const response = await axios.get(`${API_URL}/leaves/v1/month/read/all/${employee.empId}?year=${format(rosterDate, 'yyyy')}&month=${format(rosterDate, 'MM')}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
 
@@ -55,7 +55,7 @@ const LeaveModal = ({ employee, rosterDate, onClose, onSave }) => {
             console.log("Deleting leave with ID:", leaveId);
 
             try {
-                await axios.delete(`${API_URL}/leaves/delete/${leaveId}`, {
+                await axios.delete(`${API_URL}/leaves/v1/delete/${leaveId}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
             } catch (err) {
