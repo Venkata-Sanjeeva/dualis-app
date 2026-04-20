@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Users, FileDown, Inbox } from 'lucide-react';
+import { Calendar, Users, FileDown, Inbox, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -43,6 +43,23 @@ const RosterDashboard = () => {
             console.error("Error fetching chart", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteRoster = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this roster? This action cannot be undone.")) return;
+        try {
+            await axios.delete(`${API_URL}/roster/v1/delete/${id}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            setRosters(prev => prev.filter(r => r.rosterId !== id));
+            if (selectedRosterId === id) {
+                setSelectedRosterId(null);
+                setChartData(null);
+            }
+        } catch (err) {
+            console.error("Error deleting roster", err);
+            alert("Failed to delete roster. Please try again.");
         }
     };
 
@@ -127,11 +144,34 @@ const RosterDashboard = () => {
                             whileHover={{ scale: 1.02 }}
                             key={ros.rosterId}
                             onClick={() => handleRosterSelect(ros.rosterId)}
-                            className={`p-5 rounded-2xl cursor-pointer transition-all border-2 ${selectedRosterId === ros.rosterId ? 'border-indigo-500 bg-white shadow-md' : 'border-transparent bg-white shadow-sm'
+                            className={`p-5 rounded-2xl cursor-pointer transition-all border-2 relative group ${selectedRosterId === ros.rosterId
+                                ? 'border-indigo-500 bg-white shadow-md'
+                                : 'border-transparent bg-white shadow-sm'
                                 }`}
                         >
-                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{ros.rosterId}</p>
-                            <h3 className="text-lg font-semibold text-gray-800">{ros.rosterMonth} {ros.rosterYear}</h3>
+                            {/* Delete Button */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteRoster(ros.rosterId);
+                                }}
+                                className="absolute top-3 right-3 p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg z-10"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+
+                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">
+                                {ros.rosterId}
+                            </p>
+                            <div className="mt-2">
+                                <span className="text-sm font-semibold text-gray-700">
+                                    St. Dt - <b className="text-slate-900">{ros.startDate}</b>
+                                </span>
+                                <br />
+                                <span className="text-sm font-semibold text-gray-700">
+                                    En. Dt - <b className="text-slate-900">{ros.endDate}</b>
+                                </span>
+                            </div>
                         </motion.div>
                     ))}
                 </div>

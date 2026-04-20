@@ -38,7 +38,15 @@ const AddEmployeeForm = () => {
                 }
             });
 
+            alert("Employee created successfully!");
             console.log("Employee created successfully:", response.data);
+            setForm({
+                firstName: '',
+                lastName: '',
+                email: '',
+                designation: 'Engineer',
+                department: ''
+            });
 
         } catch (err) {
             console.error("Creation failed", err);
@@ -75,6 +83,7 @@ const AddEmployeeForm = () => {
                             <Fingerprint className={iconClass} />
                             <input
                                 type="text" required className={inputClass} placeholder="John"
+                                value={form.firstName}
                                 onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                             />
                         </div>
@@ -87,6 +96,7 @@ const AddEmployeeForm = () => {
                             <Fingerprint className={iconClass} />
                             <input
                                 type="text" required className={inputClass} placeholder="Doe"
+                                value={form.lastName}
                                 onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                             />
                         </div>
@@ -99,6 +109,7 @@ const AddEmployeeForm = () => {
                             <Mail className={iconClass} />
                             <input
                                 type="email" required className={inputClass} placeholder="john.doe@corpsync.com"
+                                value={form.email}
                                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                             />
                         </div>
@@ -111,6 +122,7 @@ const AddEmployeeForm = () => {
                             <ShieldCheck className={iconClass} />
                             <input
                                 type="text" className={inputClass} placeholder="Jr. Software Engineer"
+                                value={form.designation}
                                 onChange={(e) => setForm({ ...form, designation: e.target.value })}
                             />
                         </div>
@@ -123,6 +135,7 @@ const AddEmployeeForm = () => {
                             <Building2 className={iconClass} />
                             <input
                                 type="text" className={inputClass} placeholder="Engineering"
+                                value={form.department}
                                 onChange={(e) => setForm({ ...form, department: e.target.value })}
                             />
                         </div>

@@ -226,7 +226,7 @@ const CorporateRosterVersion1 = () => {
                                                             setCurrentEmpForLeave(emp);
                                                             setIsLeaveModalOpen(true);
                                                         }}
-                                                        className="absolute top-2 right-2 p-1 bg-white rounded-md text-blue-600 shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white transition-colors"
+                                                        className="absolute top-2 right-2 p-1 bg-white rounded-md text-blue-600 shadow-sm border border-blue-100 transition-colors"
                                                     >
                                                         <Calendar size={12} />
                                                     </button>
