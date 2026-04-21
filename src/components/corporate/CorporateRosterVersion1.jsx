@@ -41,9 +41,10 @@ const InputField = ({ label, ...props }) => (
 );
 
 const CorporateRosterVersion1 = () => {
+    const today = new Date();
     // --- State ---
-    const [rosterStartDate, setRosterStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-    const [rosterEndDate, setRosterEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+    const [rosterStartDate, setRosterStartDate] = useState(format(today, 'yyyy-MM-dd'));
+    const [rosterEndDate, setRosterEndDate] = useState(format(today.setDate(today.getDate() + 7), 'yyyy-MM-dd')); // Default to 1 week later
     const [availableEmployees, setAvailableEmployees] = useState([]);
     const [selectedEmployees, setSelectedEmployees] = useState([]); // IDs
     const [seniorEmployees, setSeniorEmployees] = useState([]); // IDs
@@ -66,7 +67,15 @@ const CorporateRosterVersion1 = () => {
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [currentEmpForLeave, setCurrentEmpForLeave] = useState(null);
 
-    const isValid = selectedEmployees.length > 0 && constraints.daysPerEmployee !== '';
+    const isValid = selectedEmployees.length > 0 && constraints.daysPerEmployee !== '' && constraints.offDaysPerRotation !== '' && (!constraints.requireSeniorOnShift || seniorEmployees.length > 0);
+
+    // validate senior staff array if the senior staff checkbox is checked and the employees aren't selected
+    useEffect(() => {
+        if (constraints.requireSeniorOnShift && selectedEmployees.length === 0) {
+            // Show an error or take some action
+            console.error("Senior staff is required but not selected.");
+        }
+    }, [constraints.requireSeniorOnShift, selectedEmployees]);
 
     useEffect(() => {
         const fetchEmployees = async () => {
