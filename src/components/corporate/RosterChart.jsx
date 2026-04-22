@@ -65,47 +65,160 @@ const RosterDashboard = () => {
 
     // PDF Generation Logic
     const downloadPDF = () => {
-        const doc = new jsPDF('landscape');
+        const doc = new jsPDF('portrait'); // Portrait is often better for vertical dates
         const title = `Roster Schedule: ${chartData.rosterId}`;
 
-        doc.setFontSize(18);
+        doc.setFontSize(16);
         doc.text(title, 14, 15);
-        doc.setFontSize(10);
+
+        doc.setFontSize(9);
         doc.setTextColor(100);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+        doc.text(`Legend: MS: Morning | AS: Afternoon | NS: Night | L: Leave | -: Off`, 14, 22);
 
-        const tableHeaders = [['Employee', ...chartData.dates.map(d => d.split('-')[2])]];
+        // 1. Create Headers: First column is "Date", followed by all Employee Names
+        const tableHeaders = [['Date', ...chartData.rows.map(row => row.empName)]];
 
-        const tableRows = chartData.rows.map(row => {
-            const rowData = [row.empName];
-            chartData.dates.forEach(date => {
-                const status = row.dayStatus[date];
-                rowData.push(status === 'SHIFT' ? 'S' : status === 'LEAVE' ? 'L' : '-');
+        // 2. Create Rows: Each row is a specific DATE
+        const tableRows = chartData.dates.map(date => {
+            const dayNumber = date.split('-')[2];
+            const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+
+            // Row starts with the date label (e.g., "01 May (Fri)")
+            const rowData = [`${dayNumber} (${dayName})`];
+
+            // Then add the status for every employee on THIS specific date
+            chartData.rows.forEach(empRow => {
+                const status = empRow.dayStatus[date];
+                let display = '-';
+                if (status === 'Morning') display = 'MS';
+                else if (status === 'Afternoon') display = 'AS';
+                else if (status === 'Night') display = 'NS';
+                else if (status === 'LEAVE') display = 'L';
+                rowData.push(display);
             });
+
             return rowData;
         });
 
         autoTable(doc, {
-            startY: 30,
+            startY: 28,
             head: tableHeaders,
             body: tableRows,
             theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+            // Make the Date column stand out
+            columnStyles: { 0: { halign: 'left', fontStyle: 'bold', fillColor: [245, 245, 245] } },
             headStyles: { fillColor: [79, 70, 229] }, // Indigo-600
+
             didParseCell: (data) => {
-                if (data.cell.text[0] === 'L') data.cell.styles.textColor = [220, 38, 38];
-                if (data.cell.text[0] === 'S') data.cell.styles.fontStyle = 'bold';
+                // Apply colors only to the employee status cells (skip the Date column)
+                if (data.section === 'body' && data.column.index !== 0) {
+                    const val = data.cell.text[0];
+
+                    if (val === 'L') {
+                        data.cell.styles.fillColor = [254, 226, 226]; // Red
+                        data.cell.styles.textColor = [185, 28, 28];
+                    } else if (val === 'MS') {
+                        data.cell.styles.fillColor = [255, 251, 235]; // Amber
+                    } else if (val === 'AS') {
+                        data.cell.styles.fillColor = [240, 249, 255]; // Sky
+                    } else if (val === 'NS') {
+                        data.cell.styles.fillColor = [30, 27, 75]; // Indigo
+                        data.cell.styles.textColor = [255, 255, 255];
+                    }
+                }
             }
         });
 
         doc.save(`Roster_${chartData.rosterId}.pdf`);
     };
 
+    // HORIZONTAL PDF LAYOUT - FOCUSING ON CLARITY AND LEGIBILITY
+    // const downloadPDF = () => {
+    //     const doc = new jsPDF('landscape');
+    //     const title = `Roster Schedule: ${chartData.rosterId}`;
+
+    //     // 1. Header Section
+    //     doc.setFontSize(18);
+    //     doc.text(title, 14, 15);
+    //     doc.setFontSize(10);
+    //     doc.setTextColor(100);
+    //     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+
+    //     // 2. Legend Section (Helping employees understand the codes)
+    //     doc.setFontSize(9);
+    //     doc.setTextColor(50);
+    //     doc.text("Legend: MS = Morning Shift | AS = Afternoon Shift | NS = Night Shift | L = Leave | - = Off Day", 14, 28);
+
+    //     // 3. Table Header (Extracting just the Day Number for space)
+    //     const tableHeaders = [['Employee Name', ...chartData.dates.map(d => d.split('-')[2])]];
+
+    //     // 4. Mapping Rows
+    //     const tableRows = chartData.rows.map(row => {
+    //         const rowData = [row.empName];
+    //         chartData.dates.forEach(date => {
+    //             const status = row.dayStatus[date];
+    //             let display = '-';
+    //             if (status === 'Morning') display = 'MS';
+    //             else if (status === 'Afternoon') display = 'AS';
+    //             else if (status === 'Night') display = 'NS';
+    //             else if (status === 'LEAVE') display = 'L';
+    //             rowData.push(display);
+    //         });
+    //         return rowData;
+    //     });
+
+    //     autoTable(doc, {
+    //         startY: 35,
+    //         head: tableHeaders,
+    //         body: tableRows,
+    //         theme: 'grid',
+    //         styles: { fontSize: 7, cellPadding: 1, halign: 'center' },
+    //         columnStyles: { 0: { halign: 'left', fontStyle: 'bold', fontSize: 8 } },
+    //         headStyles: { fillColor: [79, 70, 229] }, // Indigo-600
+
+    //         // 5. Visual Logic: Color coding cells based on shift type
+    //         didParseCell: (data) => {
+    //             if (data.section === 'body' && data.column.index !== 0) {
+    //                 const val = data.cell.text[0];
+
+    //                 if (val === 'L') {
+    //                     data.cell.styles.fillColor = [254, 226, 226]; // Light Red
+    //                     data.cell.styles.textColor = [185, 28, 28]; // Dark Red
+    //                 } else if (val === 'MS') {
+    //                     data.cell.styles.fillColor = ['#FFFBEB']; // Light Amber
+    //                     data.cell.styles.textColor = [180, 83, 9];
+    //                 } else if (val === 'AS') {
+    //                     data.cell.styles.fillColor = ['#F0F9FF']; // Light Sky
+    //                     data.cell.styles.textColor = [3, 105, 161];
+    //                 } else if (val === 'NS') {
+    //                     data.cell.styles.fillColor = ['#1E1B4B']; // Deep Indigo
+    //                     data.cell.styles.textColor = [255, 255, 255]; // White text
+    //                 } else if (val === '-') {
+    //                     data.cell.styles.textColor = [150, 150, 150];
+    //                 }
+    //             }
+    //         }
+    //     });
+
+    //     doc.save(`Roster_${chartData.rosterId}.pdf`);
+    // };
+
     const getStatusStyle = (status) => {
+        // 1. Handle Fixed Statuses First
+        if (status === 'LEAVE') return 'bg-red-500 text-white font-medium';
+        if (status === 'OFF' || status === 'WEEKEND_OFF') return 'bg-gray-100 text-gray-400 italic';
+
+        // 2. Handle Dynamic Shift Types
         switch (status) {
-            case 'SHIFT': return 'bg-indigo-600 text-white shadow-sm';
-            case 'LEAVE': return 'bg-red-500 text-white';
-            case 'WEEKEND_OFF': return 'bg-gray-100 text-gray-400';
-            default: return 'bg-white border border-gray-100 text-transparent';
+            case 'Morning':
+                return 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm';
+            case 'Afternoon':
+                return 'bg-sky-100 text-sky-700 border border-sky-200 shadow-sm';
+            case 'Night':
+                return 'bg-indigo-900 text-indigo-100 border border-indigo-800 shadow-sm';
+            default:
+                return 'bg-white border border-gray-50 text-transparent';
         }
     };
 
@@ -243,7 +356,7 @@ const RosterDashboard = () => {
                                                             className={`h-8 w-8 mx-auto rounded-lg flex items-center justify-center text-[10px] font-black transition-transform hover:scale-110 cursor-default ${getStatusStyle(status)}`}
                                                             title={`${row.empName} | ${date} | ${status}`}
                                                         >
-                                                            {status === 'SHIFT' ? 'S' : status === 'LEAVE' ? 'L' : ''}
+                                                            {status === 'LEAVE' ? 'L' : status === 'Morning' ? 'MS' : status === 'Afternoon' ? 'AS' : status === 'Night' ? 'NS' : status === 'SHIFT' ? 'S' : '-'}
                                                         </div>
                                                     </td>
                                                 );
