@@ -75,8 +75,10 @@ const RosterDashboard = () => {
         doc.setTextColor(100);
         doc.text(`Legend: MS: Morning | AS: Afternoon | NS: Night | L: Leave | -: Off`, 14, 22);
 
-        // 1. Create Headers: First column is "Date", followed by all Employee Names
-        const tableHeaders = [['Date', ...chartData.rows.map(row => row.empName)]];
+        // 1. Create Headers: First column is "Date", followed by all Employee Names and their seniority status
+        const tableHeaders = [['Date', ...chartData.rows.map(row =>
+            row.isSenior ? `${row.empName} (Sr.)` : row.empName
+        )]];
 
         // 2. Create Rows: Each row is a specific DATE
         const tableRows = chartData.dates.map(date => {
@@ -338,7 +340,7 @@ const RosterDashboard = () => {
                                         <tr key={idx} className="group hover:bg-indigo-50/20 transition-colors">
                                             {/* Sticky Employee Name Cell */}
                                             <td className="p-4 sticky left-0 bg-white font-semibold text-gray-700 border-b border-gray-100 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-indigo-50/50">
-                                                {row.empName}
+                                                {row.isSenior ? `${row.empName} (Sr.)` : row.empName}
                                             </td>
 
                                             {/* Status Cells */}
