@@ -30,15 +30,15 @@ const Setup = () => {
     const [classForm, setClassForm] = useState({ className: '', start: '', end: '', break: '', lunch: '', periodsPerDay: '', duration: '' });
 
     // Inside the Setup component:
-    const handleTeacherChange = (e) => {
+    const handleTeacherFormChange = (e) => {
         const { id, value } = e.target;
         // We map the UI 'id' (like tName) to the state key (like name)
-        const keyMap = { tName: 'name', tSubj: 'subject', tPer: 'periods', tDur: 'duration' };
+        const keyMap = { tName: 'name', tSubj: 'subject', tPer: 'periods', tDur: 'duration', bDur: 'break' };
         setTeacherForm(prev => ({ ...prev, [keyMap[id] || id]: value }));
     };
 
     const clearTeacherForm = () => {
-        setTeacherForm({ name: '', subject: '', periods: '', duration: '', start: '', end: '', break: '', lunch: '' });
+        setTeacherForm({ name: '', subject: '', periods: '', duration: '', start: '', end: '', break: '' });
     };
 
     const clearClassForm = () => {
@@ -52,6 +52,12 @@ const Setup = () => {
     };
 
     const cardVariants = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
+
+    const submitTeacherProfile = () => {
+        // Here you would typically send the teacherForm data to your backend API
+        console.log("Submitting Teacher Profile:", teacherForm);
+        // Example: axios.post('/api/teachers', teacherForm).then(...).catch(...);
+    }
 
     return (
         <div className="max-w-6xl mx-auto p-6 md:p-10 space-y-10">
@@ -106,15 +112,15 @@ const Setup = () => {
                                 {/* Primary Info - Row 1 (Spans all 3 columns on large screens) */}
                                 <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <FormField id="tName" label="Teacher Name">
-                                        <Input id="tName" placeholder="Dr. Smith" value={teacherForm.name} onChange={handleTeacherChange} />
+                                        <Input id="tName" placeholder="Dr. Smith" value={teacherForm.name} onChange={handleTeacherFormChange} />
                                     </FormField>
 
                                     <FormField id="tSubj" label="Subject Name">
-                                        <Input id="tSubj" placeholder="Quantum Physics" value={teacherForm.subject} onChange={handleTeacherChange} />
+                                        <Input id="tSubj" placeholder="Quantum Physics" value={teacherForm.subject} onChange={handleTeacherFormChange} />
                                     </FormField>
 
                                     <FormField id="tPer" label="Periods Assigned">
-                                        <Input id="tPer" type="number" placeholder="20" />
+                                        <Input id="tPer" type="number" placeholder="20" value={teacherForm.periods} onChange={handleTeacherFormChange} />
                                     </FormField>
                                 </div>
 
@@ -137,9 +143,9 @@ const Setup = () => {
                                             icon={Clock3}
                                         >
                                             <div className="flex gap-3 items-center">
-                                                <Input type="time" defaultValue="08:00" className="flex-1" />
+                                                <Input id="start" type="time" className="flex-1" value={teacherForm.start} onChange={handleTeacherFormChange} />
                                                 <span className="text-gray-300 font-medium">to</span>
-                                                <Input type="time" defaultValue="16:00" className="flex-1" />
+                                                <Input id="end" type="time" className="flex-1" value={teacherForm.end} onChange={handleTeacherFormChange} />
                                             </div>
                                         </FormField>
                                     </div>
@@ -147,11 +153,11 @@ const Setup = () => {
                                     {/* Durations Section (Occupies 1/3 of the row) */}
                                     <div className="lg:col-span-1 grid grid-cols-2 gap-4">
                                         <FormField id="tDur" label={<div className="flex items-baseline gap-1"><span>Period</span><span className="text-[10px] text-gray-400">(min)</span></div>}>
-                                            <Input id="tDur" type="number" placeholder="45" />
+                                            <Input id="tDur" type="number" placeholder="45" value={teacherForm.duration} onChange={handleTeacherFormChange} />
                                         </FormField>
 
                                         <FormField id="bDur" label={<div className="flex items-baseline gap-1"><span>Break</span><span className="text-[10px] text-gray-400">(min)</span></div>}>
-                                            <Input id="bDur" type="number" placeholder="15" />
+                                            <Input id="bDur" type="number" placeholder="15" value={teacherForm.break} onChange={handleTeacherFormChange} />
                                         </FormField>
                                     </div>
                                 </div>
@@ -159,7 +165,7 @@ const Setup = () => {
 
                             {/* Bottom Actions - Clean and Wide */}
                             <div className="pt-4 flex items-center gap-4">
-                                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md transition-all active:scale-[0.98]">
+                                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md transition-all active:scale-[0.98]" onClick={submitTeacherProfile}>
                                     <Plus className="w-4 h-4" />
                                     Create Teacher Profile
                                 </button>
