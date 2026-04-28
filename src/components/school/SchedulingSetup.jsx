@@ -2,6 +2,25 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, User, School, Clock3, Coffee } from 'lucide-react';
 
+// Common UI components (can be extracted to separate files later)
+const FormField = ({ id, label, icon: Icon, description, children }) => { 
+    // console.log("Rendering FormField:", { id, label, description, children });
+    return (
+        <div className="space-y-1.5">
+            <label htmlFor={id} className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                {Icon && <Icon className="w-4 h-4 text-emerald-600" />}
+                {label}
+            </label>
+            {description && <p className="text-xs text-gray-500 pb-1">{description}</p>}
+            {children}
+        </div>
+    );
+};
+
+const Input = (props) => (
+    <input {...props} className={`block w-full px-4 py-2.5 border border-gray-200 rounded-xl sm:text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition ${props.className}`} />
+);
+
 const Setup = () => {
     // Toggle state
     const [setupMode, setSetupMode] = useState('teachers'); // 'teachers' or 'class'
@@ -18,27 +37,19 @@ const Setup = () => {
         setTeacherForm(prev => ({ ...prev, [keyMap[id] || id]: value }));
     };
 
+    const clearTeacherForm = () => {
+        setTeacherForm({ name: '', subject: '', periods: '', duration: '', start: '', end: '', break: '', lunch: '' });
+    };
+
+    const clearClassForm = () => {
+        setClassForm({ className: '', start: '', end: '', break: '', lunch: '', periodsPerDay: '', duration: '' });
+    };
+
     const handleClassChange = (e) => {
         const { id, value } = e.target;
         const keyMap = { cName: 'className', cPer: 'periodsPerDay', cDur: 'duration' };
         setClassForm(prev => ({ ...prev, [keyMap[id] || id]: value }));
     };
-
-    // Common UI components (can be extracted to separate files later)
-    const FormField = ({ id, label, icon: Icon, description, children }) => (
-        <div className="space-y-1.5">
-            <label htmlFor={id} className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                {Icon && <Icon className="w-4 h-4 text-emerald-600" />}
-                {label}
-            </label>
-            {description && <p className="text-xs text-gray-500 pb-1">{description}</p>}
-            {children}
-        </div>
-    );
-
-    const Input = (props) => (
-        <input {...props} className={`block w-full px-4 py-2.5 border border-gray-200 rounded-xl sm:text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition ${props.className}`} />
-    );
 
     const cardVariants = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
 
@@ -152,7 +163,7 @@ const Setup = () => {
                                     <Plus className="w-4 h-4" />
                                     Create Teacher Profile
                                 </button>
-                                <button className="px-6 py-3 rounded-xl font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
+                                <button className="px-6 py-3 rounded-xl font-semibold text-gray-500 hover:bg-gray-50 transition-colors" onClick={clearTeacherForm}>
                                     Clear Form
                                 </button>
                             </div>
@@ -177,11 +188,11 @@ const Setup = () => {
                                 {/* Row 1: Primary Info (Full Width) */}
                                 <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <FormField id="cName" label="Class Name">
-                                        <Input id="cName" placeholder="Grade 10-A" />
+                                        <Input id="cName" placeholder="Grade 10-A" value={classForm.className} onChange={handleClassChange} />
                                     </FormField>
 
                                     <FormField id="cPer" label="Periods / Day">
-                                        <Input id="cPer" type="number" placeholder="8" />
+                                        <Input id="cPer" type="number" placeholder="8" value={classForm.periodsPerDay} onChange={handleClassChange} />
                                     </FormField>
 
                                     <FormField
@@ -193,7 +204,7 @@ const Setup = () => {
                                             </div>
                                         }
                                     >
-                                        <Input id="cDur" type="number" placeholder="40" />
+                                        <Input id="cDur" type="number" placeholder="40" value={classForm.duration} onChange={handleClassChange} />
                                     </FormField>
                                 </div>
 
@@ -270,7 +281,7 @@ const Setup = () => {
                                     <Plus className="w-4 h-4" />
                                     Add Class Schedule
                                 </button>
-                                <button className="px-6 py-3 rounded-xl font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
+                                <button className="px-6 py-3 rounded-xl font-semibold text-gray-500 hover:bg-gray-50 transition-colors" onClick={clearClassForm}>
                                     Reset Fields
                                 </button>
                             </div>
