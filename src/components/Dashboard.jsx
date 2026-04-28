@@ -69,7 +69,7 @@ const Dashboard = ({ appMode }) => {
                     <button className={cn(
                         "flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-xl shadow-sm transition",
                         isCorp ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"
-                    )} onClick={() => {navigate(isCorp ? '/corporate/roster' : '/academic/setup')}}>
+                    )} onClick={() => {navigate(isCorp ? '/corporate/employees' : '/academic/setup')}}>
                         <Plus className="w-4 h-4" /> {isCorp ? 'Add Employee' : 'New Schedule'}
                     </button>
                 </div>
