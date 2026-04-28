@@ -26,15 +26,27 @@ const Setup = () => {
     const [setupMode, setSetupMode] = useState('teachers'); // 'teachers' or 'class'
 
     // Form states (simplified)
-    const [teacherForm, setTeacherForm] = useState({ name: '', subject: '', periods: '', duration: '', start: '', end: '', break: '', lunch: '' });
-    const [classForm, setClassForm] = useState({ className: '', start: '', end: '', break: '', lunch: '', periodsPerDay: '', duration: '' });
+    const [teacherForm, setTeacherForm] = useState({ name: '', subject: '', periods: '', duration: '', start: '08:00', end: '16:00', break: '15', lunch: '30' });
+    const [classForm, setClassForm] = useState({ className: '', start: '08:30', end: '15:30', break: '15', lunch: '45', periodsPerDay: '', duration: '' });
+
+    const teacherKeyMap = { tName: 'name', tSubj: 'subject', tPer: 'periods', tDur: 'duration', bDur: 'break' };
+    const classKeyMap = { cName: 'className', cPer: 'periodsPerDay', cDur: 'duration', cStart: 'start', cEnd: 'end', cBr: 'break', cLu: 'lunch' };
+
+    const validateForm = (form) => {
+        // Basic validation: Check if required fields are filled
+        for (const key in form) {
+            if (!form[key]) {
+                return false;
+            }
+        }
+        return true;
+    };
 
     // Inside the Setup component:
     const handleTeacherFormChange = (e) => {
         const { id, value } = e.target;
-        // We map the UI 'id' (like tName) to the state key (like name)
-        const keyMap = { tName: 'name', tSubj: 'subject', tPer: 'periods', tDur: 'duration', bDur: 'break' };
-        setTeacherForm(prev => ({ ...prev, [keyMap[id] || id]: value }));
+
+        setTeacherForm(prev => ({ ...prev, [teacherKeyMap[id] || id]: value }));
     };
 
     const clearTeacherForm = () => {
@@ -42,21 +54,36 @@ const Setup = () => {
     };
 
     const clearClassForm = () => {
-        setClassForm({ className: '', start: '', end: '', break: '', lunch: '', periodsPerDay: '', duration: '' });
+        setClassForm({ className: '', start: '', end: '', break: '', lunch: '', periodsPerDay: '', duration: ''});
     };
 
     const handleClassChange = (e) => {
         const { id, value } = e.target;
-        const keyMap = { cName: 'className', cPer: 'periodsPerDay', cDur: 'duration' };
-        setClassForm(prev => ({ ...prev, [keyMap[id] || id]: value }));
+        setClassForm(prev => ({ ...prev, [classKeyMap[id] || id]: value }));
     };
 
     const cardVariants = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
 
     const submitTeacherProfile = () => {
         // Here you would typically send the teacherForm data to your backend API
+        if (!validateForm(teacherForm)) {
+            console.error("Invalid teacher form data");
+            alert("Please fill in all required fields for the teacher profile.");
+            return;
+        }
         console.log("Submitting Teacher Profile:", teacherForm);
         // Example: axios.post('/api/teachers', teacherForm).then(...).catch(...);
+    }
+
+    const submitClassSchedule = () => {
+        // Here you would typically send the classForm data to your backend API
+        if (!validateForm(classForm)) {
+            console.error("Invalid class form data");
+            alert("Please fill in all required fields for the class schedule.");
+            return;
+        }
+        console.log("Submitting Class Schedule:", classForm);
+        // Example: axios.post('/api/classes', classForm).then(...).catch(...);
     }
 
     return (
@@ -218,9 +245,9 @@ const Setup = () => {
                                 <div className="lg:col-span-2">
                                     <FormField label="Class Day Timings" icon={Clock3}>
                                         <div className="flex gap-3 items-center">
-                                            <Input type="time" defaultValue="08:30" className="flex-1" />
+                                            <Input id="cStart" type="time" className="flex-1" value={classForm.start} onChange={handleClassChange} />
                                             <span className="text-gray-300 font-medium">to</span>
-                                            <Input type="time" defaultValue="15:30" className="flex-1" />
+                                            <Input id="cEnd" type="time" className="flex-1" value={classForm.end} onChange={handleClassChange} />
                                         </div>
                                     </FormField>
                                 </div>
@@ -247,9 +274,12 @@ const Setup = () => {
                                             <div className="space-y-1">
                                                 <div className="relative flex items-center">
                                                     <Input
+                                                        id="cBr"
                                                         type="number"
-                                                        defaultValue="15"
                                                         className="pr-8 border-amber-200 focus:ring-amber-500"
+                                                        placeholder="15"
+                                                        value={classForm.break}
+                                                        onChange={handleClassChange}
                                                     />
                                                     <span className="absolute right-2.5 text-[10px] font-semibold text-amber-500 pointer-events-none">
                                                         min
@@ -265,7 +295,10 @@ const Setup = () => {
                                                 <div className="relative flex items-center">
                                                     <Input
                                                         type="number"
-                                                        defaultValue="45"
+                                                        id="cLu"
+                                                        placeholder="30"
+                                                        value={classForm.lunch}
+                                                        onChange={handleClassChange}
                                                         className="pr-8 border-teal-200 focus:ring-teal-500"
                                                     />
                                                     <span className="absolute right-2.5 text-[10px] font-semibold text-teal-500 pointer-events-none">
@@ -283,7 +316,7 @@ const Setup = () => {
 
                             {/* Bottom Actions */}
                             <div className="pt-4 flex items-center gap-4">
-                                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-teal-600 text-white hover:bg-teal-700 shadow-md transition-all active:scale-[0.98]">
+                                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-teal-600 text-white hover:bg-teal-700 shadow-md transition-all active:scale-[0.98]" onClick={submitClassSchedule}>
                                     <Plus className="w-4 h-4" />
                                     Add Class Schedule
                                 </button>
